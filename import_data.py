@@ -37,12 +37,15 @@ def modify_columns(ticker, normalize):
     return df #df.loc[500:] # remove first 500 days
 
 
-def get_data(tickers, binarize=False, lt_eq_5=True, high_vol=True):
+def get_quandl_data(binarize=False, gt=2.0, lt=10.0, vol=10**5):
+    
+    tickers = [filename[:-4] for filename in os.listdir('/Users/excalibur/Dropbox/datasets/quandl_data/') if filename != '.DS_Store']
+
     normalize = False
 
     scale_volume = False
 
-    # import data
+    # gather data
     stock_df = pd.DataFrame()
     for ticker in tickers:
         if stock_df.empty:
@@ -64,18 +67,27 @@ def get_data(tickers, binarize=False, lt_eq_5=True, high_vol=True):
     # add bias
     #stock_df.insert(0, 'bias', 1.0)
 
+    # keep tickers for predictions
+    pred_tickers = stock_df['ticker'].unique()
+
+    # categoricalize tickers
+    stock_df['ticker'] = stock_df['ticker'].astype('category').cat.codes
+
+    # replace Infs with NaNs
     stock_df = stock_df.replace([np.inf, -np.inf], np.nan)
 
-    if lt_eq_5 == True:
-        # remove PPS > 5.0
-        stock_df = stock_df[stock_df['Open'] <= 5.0]
+    # keep PPS > gt
+    stock_df = stock_df[stock_df['Open'] > gt]
 
-    if high_vol == True:
-        # remove lower volume
-        stock_df = stock_df[stock_df['Volume'] > 10**5]
+    # keep PPS < lt
+    stock_df = stock_df[stock_df['Open'] < lt]
+
+    # keep volume > vol
+    stock_df = stock_df[stock_df['Volume'] > vol]
 
     prediction_df = stock_df.copy()
-    stock_df = stock_df.drop('ticker', axis=1)
+
+    #stock_df = stock_df.drop('ticker', axis=1)
 
     stock_df = stock_df.dropna()
 
@@ -83,4 +95,95 @@ def get_data(tickers, binarize=False, lt_eq_5=True, high_vol=True):
     if binarize == True:
         stock_df['label'] = stock_df['label'].map(lambda x: 1 if x >= 0.05 else 0)
 
-    return stock_df, prediction_df
+    return stock_df, prediction_df, pred_tickers
+
+#########################################
+
+def flatten_goog_data(ticker):
+    
+  stock_df = pd.read_csv("/Users/excalibur/Dropbox/datasets/goog_data/{}.csv".format(ticker))
+  
+  #print stock_df['time'].value_counts()
+  stock_df = stock_df[(stock_df['time'] != 9.3) & (stock_df['time'] != 16.0)]
+  #print stock_df['time'].value_counts()
+  times = stock_df['time'].unique()
+  
+  columns = list(stock_df.columns)
+  
+  new_columns = []
+  
+  for time in times:
+      for column in columns:
+          new_columns.append(str(time) + "-" + column)
+  
+  #print "number of flattened columns", len(new_columns)
+  #print new_columns
+  
+  flat_values = stock_df.values.ravel()
+  stock_df = pd.DataFrame(columns=new_columns)
+  
+  errors = 0
+  for day in xrange(len(flat_values)/len(new_columns)):
+      
+    day_values = flat_values[:len(new_columns)]
+    
+    #if day == 0:
+    #    print list(day_values)
+
+    if day_values[0] != 10.0 or day_values[-9] != 15.3:
+        errors += 1
+        continue
+    else:
+        df = pd.DataFrame([list(day_values)], columns=new_columns)
+        stock_df = stock_df.append(df)
+    
+        flat_values = flat_values[len(new_columns):]
+
+  #print "number of errors:", errors, "for", ticker
+
+  stock_df['label'] = ((stock_df['15.3-CLOSE'] / stock_df['10.0-OPEN']) - 1).shift(-1)
+
+  stock_df['ticker'] = ticker
+
+  return stock_df
+
+def get_goog_data(binarize=False, gt=2.0, lt=10.0, vol=1000):
+
+  tickers = [filename[:-4] for filename in os.listdir('/Users/excalibur/Dropbox/datasets/goog_data/') if filename != '.DS_Store']
+
+  # gather data
+  stock_df = pd.DataFrame()
+  for ticker in tickers:
+    if stock_df.empty:
+        stock_df = flatten_goog_data(ticker)
+    else:
+      df = flatten_goog_data(ticker)
+      if not df.empty and len(df.columns) == len(stock_df.columns):
+        stock_df = stock_df.append(df)
+
+  week_days = stock_df['10.0-week_day'].values
+  stock_df = stock_df.drop([col for col in stock_df.columns if ("time" in col) or ("week_day" in col)], axis=1)
+  stock_df['week_day'] = week_days
+
+  # keep PPS > gt
+  stock_df = stock_df[stock_df['10.0-CLOSE'] > gt]
+
+  # keep PPS < lt
+  stock_df = stock_df[stock_df['10.0-CLOSE'] < lt]
+
+  # keep volume > vol
+  stock_df = stock_df[stock_df['10.0-VOLUME'] > vol]
+
+  prediction_df = stock_df.copy()
+  stock_df = stock_df.drop('ticker', axis=1)
+
+  stock_df = stock_df.dropna()
+
+  # binarize labels
+  if binarize == True:
+    stock_df['label'] = stock_df['label'].map(lambda x: 1 if x >= 0.05 else 0)
+
+
+  return stock_df, prediction_df
+
+

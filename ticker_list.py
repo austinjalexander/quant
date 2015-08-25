@@ -68,7 +68,7 @@ tickers = ['AAVL',
            'FLDM',
            'FONR',
            'GENE',
-           'GEVA',
+           #'GEVA',  # not available on TD
            'GILD',
            'GNCA',
            'HALO',

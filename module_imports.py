@@ -13,7 +13,7 @@ from matplotlib import pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import seaborn as sns
 
-import ticker_list
+from ticker_list import *
 
 from sklearn.cross_validation import train_test_split
 from sklearn.cross_validation import StratifiedShuffleSplit
