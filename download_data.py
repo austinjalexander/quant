@@ -7,8 +7,8 @@ def check_quandl_latest(ticker):
 
 def download_quandl():
 
-  start_tickers = ticker_list.tickers
-  tickers = []
+  start_tickers = tickers
+  final_tickers = []
 
   print "\n", len(start_tickers), "total tickers to start\n"
 
@@ -17,12 +17,12 @@ def download_quandl():
       try:
           stock_df = Quandl.get("YAHOO/{}".format(ticker), authtoken='DVhizWXNTePyzzy1eHWR')
           stock_df.to_csv("/Users/excalibur/Dropbox/datasets/quandl_data/{}.csv".format(ticker), index=False)
-          tickers.append(ticker)
+          final_tickers.append(ticker)
       except:
           print "removed:", ticker
               
-  print "\n", len(tickers), "available tickers:"
-  print tickers
+  print "\n", len(final_tickers), "available tickers:"
+  print final_tickers
 
 ################################
 
