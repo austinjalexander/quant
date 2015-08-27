@@ -16,6 +16,11 @@ def download_quandl():
   for ticker in start_tickers:
       try:
           stock_df = Quandl.get("YAHOO/{}".format(ticker), authtoken='DVhizWXNTePyzzy1eHWR')
+
+          # keep dates
+          dates = stock_df.index.values
+          stock_df['date'] = dates
+
           stock_df.to_csv("/Users/excalibur/Dropbox/datasets/quandl_data/{}.csv".format(ticker), index=False)
           final_tickers.append(ticker)
       except:
@@ -54,6 +59,12 @@ def download_goog_stock(ticker, seconds_interval, num_of_days):
 
     # convert unix timestamps to human-readable formats
     time_indices = [datetime.datetime.fromtimestamp(x).strftime('%Y-%m-%d %H:%M:%S') for x in time_indices]
+
+    # keep dates (i.e., not times)
+    dates = [x for x in time_indices]
+
+    # create new column in data frame
+    stock_df['date'] = dates
     
     # keep times (i.e., not dates)
     times = [float(x[-8:-3].replace(':','.')) for x in time_indices]

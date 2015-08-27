@@ -168,6 +168,15 @@ def get_goog_data(binarize=False, gt=2.0, lt=10.0, vol=1000):
   stock_df = stock_df.drop([col for col in stock_df.columns if ("time" in col) or ("week_day" in col)], axis=1)
   stock_df['week_day'] = week_days
 
+  # keep tickers for predictions
+  pred_tickers = stock_df['ticker'].unique()
+
+  # categoricalize tickers
+  stock_df['ticker'] = stock_df['ticker'].astype('category').cat.codes
+
+  # replace Infs with NaNs
+  stock_df = stock_df.replace([np.inf, -np.inf], np.nan)
+
   # keep PPS > gt
   stock_df = stock_df[stock_df['10.0-CLOSE'] > gt]
 
@@ -178,7 +187,8 @@ def get_goog_data(binarize=False, gt=2.0, lt=10.0, vol=1000):
   stock_df = stock_df[stock_df['10.0-VOLUME'] > vol]
 
   prediction_df = stock_df.copy()
-  stock_df = stock_df.drop('ticker', axis=1)
+
+  #stock_df = stock_df.drop('ticker', axis=1)
 
   stock_df = stock_df.dropna()
 
@@ -187,6 +197,6 @@ def get_goog_data(binarize=False, gt=2.0, lt=10.0, vol=1000):
     stock_df['label'] = stock_df['label'].map(lambda x: 1 if x >= 0.05 else 0)
 
 
-  return stock_df, prediction_df
+  return stock_df, prediction_df, pred_tickers
 
 
