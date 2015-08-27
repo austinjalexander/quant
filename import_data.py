@@ -7,6 +7,9 @@ def modify_columns(ticker, normalize):
     df['50dravg'] = pd.rolling_mean(df['Close'], window=50)
     df['200dravg'] = pd.rolling_mean(df['Close'], window=200)
 
+    df['50dravg'] = pd.rolling_mean(df['Close'], window=50)
+    df['200dravg'] = pd.rolling_mean(df['Close'], window=200)
+
     if normalize == True:
         temp_df = df['Volume']
         df = df.drop('Volume', axis=1)
