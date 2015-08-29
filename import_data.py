@@ -35,12 +35,13 @@ def modify_columns(ticker, normalize):
     
     df['ticker'] = ticker
 
-    df['label'] = df['OC%'].shift(-1)
+    #df['label'] = df['OC%'].shift(-1)
+    df['label'] = df['HL%'].shift(-1)
     
     return df #df.loc[500:] # remove first 500 days
 
 
-def get_quandl_data(binarize=False, gt=2.0, lt=10.0, vol=10**5):
+def get_quandl_data():
     
     tickers = [filename[:-4] for filename in os.listdir('/Users/excalibur/Dropbox/datasets/quandl_data/') if filename != '.DS_Store']
 
@@ -74,29 +75,16 @@ def get_quandl_data(binarize=False, gt=2.0, lt=10.0, vol=10**5):
     pred_tickers = stock_df['ticker'].unique()
 
     # categoricalize tickers
-    stock_df['ticker'] = stock_df['ticker'].astype('category').cat.codes
+    #stock_df['ticker'] = stock_df['ticker'].astype('category').cat.codes
 
     # replace Infs with NaNs
     stock_df = stock_df.replace([np.inf, -np.inf], np.nan)
-
-    # keep PPS > gt
-    stock_df = stock_df[stock_df['Open'] > gt]
-
-    # keep PPS < lt
-    stock_df = stock_df[stock_df['Open'] < lt]
-
-    # keep volume > vol
-    stock_df = stock_df[stock_df['Volume'] > vol]
 
     prediction_df = stock_df.copy()
 
     #stock_df = stock_df.drop('ticker', axis=1)
 
     stock_df = stock_df.dropna()
-
-    # binarize labels
-    if binarize == True:
-        stock_df['label'] = stock_df['label'].map(lambda x: 1 if x >= 0.05 else 0)
 
     return stock_df, prediction_df, pred_tickers
 
@@ -105,6 +93,9 @@ def get_quandl_data(binarize=False, gt=2.0, lt=10.0, vol=10**5):
 def flatten_goog_data(ticker):
     
   stock_df = pd.read_csv("/Users/excalibur/Dropbox/datasets/goog_data/{}.csv".format(ticker))
+
+  # intraday drop last rows
+  stock_df = stock_df.drop(stock_df.index[[-1,-2]])
   
   #print stock_df['time'].value_counts()
   stock_df = stock_df[(stock_df['time'] != 9.3) & (stock_df['time'] != 16.0)]
@@ -133,7 +124,7 @@ def flatten_goog_data(ticker):
     #if day == 0:
     #    print list(day_values)
 
-    if day_values[0] != 10.0 or day_values[-9] != 15.3:
+    if day_values[0] != 10.0 or day_values[-10] != 15.3:
         errors += 1
         continue
     else:
@@ -150,7 +141,7 @@ def flatten_goog_data(ticker):
 
   return stock_df
 
-def get_goog_data(binarize=False, gt=2.0, lt=10.0, vol=1000):
+def get_goog_data():
 
   tickers = [filename[:-4] for filename in os.listdir('/Users/excalibur/Dropbox/datasets/goog_data/') if filename != '.DS_Store']
 
@@ -165,37 +156,25 @@ def get_goog_data(binarize=False, gt=2.0, lt=10.0, vol=1000):
         stock_df = stock_df.append(df)
 
   week_days = stock_df['10.0-week_day'].values
-  stock_df = stock_df.drop([col for col in stock_df.columns if ("time" in col) or ("week_day" in col)], axis=1)
+  dates = stock_df['10.0-date'].values
+  stock_df = stock_df.drop([col for col in stock_df.columns if ("time" in col) or ("week_day" in col) or ("date" in col)], axis=1)
   stock_df['week_day'] = week_days
+  stock_df['date'] = dates
 
   # keep tickers for predictions
   pred_tickers = stock_df['ticker'].unique()
 
   # categoricalize tickers
-  stock_df['ticker'] = stock_df['ticker'].astype('category').cat.codes
+  #stock_df['ticker'] = stock_df['ticker'].astype('category').cat.codes
 
   # replace Infs with NaNs
   stock_df = stock_df.replace([np.inf, -np.inf], np.nan)
-
-  # keep PPS > gt
-  stock_df = stock_df[stock_df['10.0-CLOSE'] > gt]
-
-  # keep PPS < lt
-  stock_df = stock_df[stock_df['10.0-CLOSE'] < lt]
-
-  # keep volume > vol
-  stock_df = stock_df[stock_df['10.0-VOLUME'] > vol]
 
   prediction_df = stock_df.copy()
 
   #stock_df = stock_df.drop('ticker', axis=1)
 
   stock_df = stock_df.dropna()
-
-  # binarize labels
-  if binarize == True:
-    stock_df['label'] = stock_df['label'].map(lambda x: 1 if x >= 0.05 else 0)
-
 
   return stock_df, prediction_df, pred_tickers
 

@@ -14,17 +14,17 @@ def download_quandl():
 
   # download data
   for ticker in start_tickers:
-      try:
-          stock_df = Quandl.get("YAHOO/{}".format(ticker), authtoken='DVhizWXNTePyzzy1eHWR')
+    try:
+      stock_df = Quandl.get("YAHOO/{}".format(ticker), authtoken='DVhizWXNTePyzzy1eHWR')
 
-          # keep dates
-          dates = stock_df.index.values
-          stock_df['date'] = dates
+      # keep dates
+      dates = stock_df.index.values
+      stock_df['date'] = dates
 
-          stock_df.to_csv("/Users/excalibur/Dropbox/datasets/quandl_data/{}.csv".format(ticker), index=False)
-          final_tickers.append(ticker)
-      except:
-          print "removed:", ticker
+      stock_df.to_csv("/Users/excalibur/Dropbox/datasets/quandl_data/{}.csv".format(ticker), index=False)
+      final_tickers.append(ticker)
+    except:
+      print "removed:", ticker
               
   print "\n", len(final_tickers), "available tickers:"
   print final_tickers
@@ -62,6 +62,7 @@ def download_goog_stock(ticker, seconds_interval, num_of_days):
 
     # keep dates (i.e., not times)
     dates = [x for x in time_indices]
+    dates = [date[:10] for date in dates]
 
     # create new column in data frame
     stock_df['date'] = dates
