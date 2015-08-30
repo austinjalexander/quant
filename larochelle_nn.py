@@ -288,7 +288,7 @@ def NN_SGD(GQ_df, binarize, gt, lt, vol, balance_labeled_data, vectorize_label, 
     X_train = X_train[indices]
     y_train = [y_train[index] for index in indices]
 
-    # keep track of training examples
+    # keep track of training examples;
     # only let positive label example go through first
     last = np.array([[1],
                      [0]])
