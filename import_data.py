@@ -35,8 +35,8 @@ def modify_columns(ticker, normalize):
     
     df['ticker'] = ticker
 
-    #df['label'] = df['OC%'].shift(-1)
-    df['label'] = df['HL%'].shift(-1)
+    df['label'] = df['OC%'].shift(-1)
+    #df['label'] = df['HL%'].shift(-1)
     
     return df #df.loc[500:] # remove first 500 days
 
